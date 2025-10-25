@@ -1,0 +1,50 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║          🎉 IPTV ADMIN PORTAL - QUICK START 🎉              ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+📍 You are here: /workspace
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  🚀 START THE SERVER
+
+     npm start
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  🌐 OPEN IN BROWSER
+
+     http://localhost:3000
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  🔑 LOGIN
+
+     Username: admin
+     Password: admin123
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  ✨ FEATURES READY
+
+     ✓ Client Management
+     ✓ Subscription Tracking
+     ✓ WhatsApp Alerts
+     ✓ Dashboard & Statistics
+     ✓ Expiry Monitoring
+     ✓ One-Click Renewals
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  📚 MORE INFO
+
+     Read: START_HERE.md (2-minute guide)
+     Full docs: README.md
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+           Everything is ready! Start managing now! 🎊
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
