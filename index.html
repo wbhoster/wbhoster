@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IPTV Admin Portal</title>
+    <link rel="stylesheet" href="admin-style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="loginPage" class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <i class="fas fa-tv"></i>
+                <h1>IPTV Admin Portal</h1>
+                <p>Manage your IPTV subscriptions</p>
+            </div>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="username">
+                        <i class="fas fa-user"></i> Username
+                    </label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">
+                        <i class="fas fa-lock"></i> Password
+                    </label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <i class="fas fa-sign-in-alt"></i> Login
+                </button>
+                <div id="loginError" class="error-message" style="display: none;"></div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Main Admin Portal -->
+    <div id="adminPortal" style="display: none;">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <i class="fas fa-tv"></i>
+                <h2>IPTV Admin</h2>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="#" data-page="dashboard" class="nav-item active">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="#" data-page="clients" class="nav-item">
+                    <i class="fas fa-users"></i> Clients
+                </a>
+                <a href="#" data-page="subscriptions" class="nav-item">
+                    <i class="fas fa-calendar-alt"></i> Subscriptions
+                </a>
+                <a href="#" data-page="alerts" class="nav-item">
+                    <i class="fas fa-bell"></i> WhatsApp Alerts
+                </a>
+                <a href="#" data-page="expiring" class="nav-item">
+                    <i class="fas fa-exclamation-triangle"></i> Expiring Soon
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <a href="#" id="logoutBtn" class="nav-item">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </a>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Bar -->
+            <div class="top-bar">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 id="pageTitle">Dashboard</h1>
+                <div class="user-info">
+                    <span id="adminUsername"></span>
+                    <i class="fas fa-user-circle"></i>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Dashboard Page -->
+                <div id="dashboardPage" class="page active">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-icon blue">
+                                <i class="fas fa-users"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="totalClients">0</h3>
+                                <p>Total Clients</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon green">
+                                <i class="fas fa-check-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="activeSubscriptions">0</h3>
+                                <p>Active Subscriptions</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon orange">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="expiringSoon">0</h3>
+                                <p>Expiring Soon</p>
+                            </div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon red">
+                                <i class="fas fa-times-circle"></i>
+                            </div>
+                            <div class="stat-info">
+                                <h3 id="expiredSubscriptions">0</h3>
+                                <p>Expired</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="recent-section">
+                        <h2>Recent Subscriptions</h2>
+                        <div class="table-container">
+                            <table id="recentSubscriptionsTable">
+                                <thead>
+                                    <tr>
+                                        <th>Client</th>
+                                        <th>Plan</th>
+                                        <th>End Date</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Clients Page -->
+                <div id="clientsPage" class="page">
+                    <div class="page-header">
+                        <div class="search-box">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="clientSearch" placeholder="Search clients...">
+                        </div>
+                        <button class="btn btn-primary" id="addClientBtn">
+                            <i class="fas fa-plus"></i> Add Client
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table id="clientsTable">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Phone</th>
+                                    <th>WhatsApp</th>
+                                    <th>Email</th>
+                                    <th>Subscriptions</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Subscriptions Page -->
+                <div id="subscriptionsPage" class="page">
+                    <div class="page-header">
+                        <div class="filter-buttons">
+                            <button class="btn btn-filter active" data-filter="all">All</button>
+                            <button class="btn btn-filter" data-filter="active">Active</button>
+                            <button class="btn btn-filter" data-filter="expired">Expired</button>
+                        </div>
+                        <button class="btn btn-primary" id="addSubscriptionBtn">
+                            <i class="fas fa-plus"></i> Add Subscription
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table id="subscriptionsTable">
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Plan</th>
+                                    <th>Device</th>
+                                    <th>Start Date</th>
+                                    <th>End Date</th>
+                                    <th>Status</th>
+                                    <th>Payment</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Alerts Page -->
+                <div id="alertsPage" class="page">
+                    <div class="page-header">
+                        <h2>WhatsApp Alerts History</h2>
+                        <button class="btn btn-primary" id="sendBulkAlertBtn">
+                            <i class="fas fa-paper-plane"></i> Send Bulk Alert
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table id="alertsTable">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Client</th>
+                                    <th>WhatsApp Number</th>
+                                    <th>Message</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Expiring Page -->
+                <div id="expiringPage" class="page">
+                    <div class="page-header">
+                        <h2>Expiring Subscriptions (Next 7 Days)</h2>
+                        <button class="btn btn-warning" id="sendAllRemindersBtn">
+                            <i class="fas fa-bell"></i> Send All Reminders
+                        </button>
+                    </div>
+                    <div class="table-container">
+                        <table id="expiringTable">
+                            <thead>
+                                <tr>
+                                    <th>Client</th>
+                                    <th>Plan</th>
+                                    <th>End Date</th>
+                                    <th>Days Left</th>
+                                    <th>WhatsApp</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modals will be inserted here by JavaScript -->
+    <div id="modalContainer"></div>
+
+    <script src="admin-app.js"></script>
+</body>
+</html>

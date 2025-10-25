@@ -1,0 +1,27 @@
+{
+  "name": "iptv-admin-portal",
+  "version": "1.0.0",
+  "description": "IPTV Subscription Management Portal with WhatsApp Alerts",
+  "main": "server.js",
+  "scripts": {
+    "start": "PORT=3000 node server.js",
+    "dev": "PORT=3000 nodemon server.js"
+  },
+  "keywords": ["iptv", "subscription", "whatsapp", "admin"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.2",
+    "sqlite3": "^5.1.6",
+    "body-parser": "^1.20.2",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "axios": "^1.6.0",
+    "dotenv": "^16.3.1",
+    "cors": "^2.8.5",
+    "date-fns": "^2.30.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
