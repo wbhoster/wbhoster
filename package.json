@@ -4,22 +4,28 @@
   "description": "IPTV Subscription Management Portal with WhatsApp Alerts",
   "main": "server.js",
   "scripts": {
-    "start": "PORT=3000 node server.js",
-    "dev": "PORT=3000 nodemon server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js",
+    "build": "cd client && npm run build",
+    "install-all": "npm install && cd client && npm install"
   },
   "keywords": ["iptv", "subscription", "whatsapp", "admin"],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "express": "^4.18.2",
-    "sqlite3": "^5.1.6",
+    "mysql2": "^3.6.5",
     "body-parser": "^1.20.2",
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.2",
     "axios": "^1.6.0",
     "dotenv": "^16.3.1",
     "cors": "^2.8.5",
-    "date-fns": "^2.30.0"
+    "date-fns": "^2.30.0",
+    "node-cron": "^3.0.3",
+    "pdfkit": "^0.13.0",
+    "form-data": "^4.0.0",
+    "multer": "^1.4.5-lts.1"
   },
   "devDependencies": {
     "nodemon": "^3.0.1"

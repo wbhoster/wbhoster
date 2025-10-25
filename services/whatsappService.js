@@ -1,122 +1,199 @@
 const axios = require('axios');
+const FormData = require('form-data');
 
 /**
- * Send WhatsApp message using WhatsApp Business API (Meta)
- * You can also switch to Twilio by uncommenting the Twilio section
+ * Send WhatsApp message using 360Messenger API
+ * API Documentation: https://api.360messenger.com/v2/sendMessage
  */
-async function sendWhatsAppMessage(phoneNumber, message) {
+async function sendWhatsAppMessage(phoneNumber, text, options = {}) {
   try {
-    // Format phone number (remove + and spaces)
+    const apiKey = process.env.WHATSAPP_API_KEY;
+    const apiUrl = process.env.WHATSAPP_API_URL || 'https://api.360messenger.com/v2/sendMessage';
+
+    if (!apiKey) {
+      console.warn('⚠️ WhatsApp API key not configured');
+      return {
+        success: false,
+        message: 'WhatsApp API key not configured',
+        error: 'Missing API key'
+      };
+    }
+
+    // Format phone number (remove spaces, +, -, ( and ))
     const formattedNumber = phoneNumber.replace(/[\s+\-()]/g, '');
 
-    // OPTION 1: Meta WhatsApp Business API
-    if (process.env.WHATSAPP_ACCESS_TOKEN && process.env.WHATSAPP_PHONE_NUMBER_ID) {
-      const url = `${process.env.WHATSAPP_API_URL}/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
-      
-      const response = await axios.post(
-        url,
-        {
-          messaging_product: 'whatsapp',
-          to: formattedNumber,
-          type: 'text',
-          text: {
-            body: message
-          }
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${process.env.WHATSAPP_ACCESS_TOKEN}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+    // Prepare form data
+    const formData = new FormData();
+    formData.append('phonenumber', formattedNumber);
+    formData.append('text', text);
 
-      console.log('WhatsApp message sent via Meta API:', response.data);
-      return {
-        success: true,
-        message: 'Message sent successfully',
-        messageId: response.data.messages[0].id,
-        provider: 'meta'
-      };
+    // Add optional image URL if provided
+    if (options.imageUrl) {
+      formData.append('url', options.imageUrl);
     }
 
-    // OPTION 2: Twilio WhatsApp API
-    // Uncomment this section if you want to use Twilio
-    /*
-    if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
-      const accountSid = process.env.TWILIO_ACCOUNT_SID;
-      const authToken = process.env.TWILIO_AUTH_TOKEN;
-      const twilioNumber = process.env.TWILIO_WHATSAPP_NUMBER;
-
-      const response = await axios.post(
-        `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
-        new URLSearchParams({
-          From: twilioNumber,
-          To: `whatsapp:+${formattedNumber}`,
-          Body: message
-        }),
-        {
-          auth: {
-            username: accountSid,
-            password: authToken
-          }
-        }
-      );
-
-      console.log('WhatsApp message sent via Twilio:', response.data);
-      return {
-        success: true,
-        message: 'Message sent successfully',
-        messageId: response.data.sid,
-        provider: 'twilio'
-      };
+    // Add optional delay (format: MM-DD-YYYY HH:MM in GMT)
+    if (options.delay) {
+      formData.append('delay', options.delay);
     }
-    */
 
-    // If no API is configured, return mock success (for testing)
-    console.warn('⚠️ WhatsApp API not configured. Message would be sent to:', formattedNumber);
-    console.log('Message content:', message);
-    
+    // Send request to 360Messenger API
+    const response = await axios.post(apiUrl, formData, {
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        ...formData.getHeaders()
+      },
+      timeout: 30000
+    });
+
+    console.log('✅ WhatsApp message sent via 360Messenger:', {
+      to: formattedNumber,
+      status: response.status,
+      data: response.data
+    });
+
     return {
       success: true,
-      message: 'WhatsApp API not configured. This is a mock response. Please configure your WhatsApp API credentials in .env file.',
-      messageId: 'mock_' + Date.now(),
-      provider: 'mock',
+      message: 'Message sent successfully',
+      messageId: response.data?.messageId || response.data?.id || null,
+      response: response.data,
+      provider: '360messenger',
       phoneNumber: formattedNumber
     };
 
   } catch (error) {
-    console.error('Error sending WhatsApp message:', error.response?.data || error.message);
+    console.error('❌ Error sending WhatsApp message:', error.response?.data || error.message);
+    
     return {
       success: false,
       message: 'Failed to send message',
-      error: error.response?.data?.error?.message || error.message
+      error: error.response?.data?.message || error.message,
+      details: error.response?.data
     };
   }
 }
 
 /**
- * Send bulk WhatsApp messages
+ * Send bulk WhatsApp messages with delay between each
  */
-async function sendBulkWhatsAppMessages(recipients) {
+async function sendBulkWhatsAppMessages(recipients, delayMs = 2000) {
   const results = [];
   
   for (const recipient of recipients) {
-    const result = await sendWhatsAppMessage(recipient.phoneNumber, recipient.message);
-    results.push({
-      ...result,
-      recipient: recipient.name,
-      phoneNumber: recipient.phoneNumber
-    });
-    
-    // Add delay between messages to avoid rate limiting
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const result = await sendWhatsAppMessage(
+        recipient.phoneNumber,
+        recipient.message,
+        recipient.options || {}
+      );
+      
+      results.push({
+        ...result,
+        recipient: recipient.name,
+        phoneNumber: recipient.phoneNumber
+      });
+      
+      // Add delay between messages to avoid rate limiting
+      if (delayMs > 0) {
+        await new Promise(resolve => setTimeout(resolve, delayMs));
+      }
+    } catch (error) {
+      results.push({
+        success: false,
+        recipient: recipient.name,
+        phoneNumber: recipient.phoneNumber,
+        error: error.message
+      });
+    }
   }
   
   return results;
 }
 
+/**
+ * Send WhatsApp message with optional scheduled delay
+ * @param {string} phoneNumber - WhatsApp number
+ * @param {string} text - Message text
+ * @param {Date} scheduledDate - Optional: Schedule for future (GMT)
+ * @param {string} imageUrl - Optional: Image URL
+ */
+async function sendScheduledMessage(phoneNumber, text, scheduledDate = null, imageUrl = null) {
+  const options = {};
+
+  if (imageUrl) {
+    options.imageUrl = imageUrl;
+  }
+
+  if (scheduledDate && scheduledDate instanceof Date) {
+    // Format date as MM-DD-YYYY HH:MM (GMT)
+    const month = String(scheduledDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(scheduledDate.getUTCDate()).padStart(2, '0');
+    const year = scheduledDate.getUTCFullYear();
+    const hours = String(scheduledDate.getUTCHours()).padStart(2, '0');
+    const minutes = String(scheduledDate.getUTCMinutes()).padStart(2, '0');
+    
+    options.delay = `${month}-${day}-${year} ${hours}:${minutes}`;
+    console.log(`📅 Message scheduled for: ${options.delay} GMT`);
+  }
+
+  return await sendWhatsAppMessage(phoneNumber, text, options);
+}
+
+/**
+ * Replace template variables with actual values
+ */
+function replaceTemplateVariables(template, variables) {
+  let message = template;
+  
+  for (const [key, value] of Object.entries(variables)) {
+    const placeholder = `{${key}}`;
+    message = message.split(placeholder).join(value || '');
+  }
+  
+  return message;
+}
+
+/**
+ * Test WhatsApp API connection
+ */
+async function testWhatsAppConnection(testNumber = null) {
+  try {
+    const apiKey = process.env.WHATSAPP_API_KEY;
+    
+    if (!apiKey) {
+      return {
+        success: false,
+        message: 'WhatsApp API key not configured in environment variables'
+      };
+    }
+
+    // If test number provided, send actual test message
+    if (testNumber) {
+      const result = await sendWhatsAppMessage(
+        testNumber,
+        '✅ Test message from IPTV Admin Portal\n\nYour WhatsApp integration is working correctly!'
+      );
+      return result;
+    }
+
+    return {
+      success: true,
+      message: 'API key is configured. Provide a test number to send actual message.'
+    };
+
+  } catch (error) {
+    return {
+      success: false,
+      message: 'Failed to test connection',
+      error: error.message
+    };
+  }
+}
+
 module.exports = {
   sendWhatsAppMessage,
-  sendBulkWhatsAppMessages
+  sendBulkWhatsAppMessages,
+  sendScheduledMessage,
+  replaceTemplateVariables,
+  testWhatsAppConnection
 };
