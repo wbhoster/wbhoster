@@ -1,11 +1,13 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { getQuery } = require('../database');
+const { getOne } = require('../database');
 
 const router = express.Router();
 
-// Login
+/**
+ * Login endpoint
+ */
 router.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body;
@@ -14,68 +16,91 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ error: 'Username and password are required' });
     }
 
-    const admin = await getQuery('SELECT * FROM admins WHERE username = ?', [username]);
+    // Find admin user
+    const admin = await getOne(
+      'SELECT * FROM admins WHERE username = ? AND status = ?',
+      [username, 'active']
+    );
 
     if (!admin) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
-    const validPassword = bcrypt.compareSync(password, admin.password);
+    // Verify password
+    const validPassword = await bcrypt.compare(password, admin.password);
 
     if (!validPassword) {
-      return res.status(401).json({ error: 'Invalid credentials' });
+      return res.status(401).json({ error: 'Invalid username or password' });
     }
 
+    // Generate JWT token
+    const secret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this';
+    const expiresIn = process.env.JWT_EXPIRES_IN || '7d';
+    
     const token = jwt.sign(
-      { id: admin.id, username: admin.username },
-      process.env.JWT_SECRET || 'default_secret',
-      { expiresIn: '24h' }
+      { 
+        id: admin.id, 
+        username: admin.username,
+        email: admin.email
+      },
+      secret,
+      { expiresIn }
     );
 
     res.json({
       success: true,
+      message: 'Login successful',
       token,
-      user: {
+      admin: {
         id: admin.id,
-        username: admin.username
+        username: admin.username,
+        email: admin.email,
+        full_name: admin.full_name
       }
     });
-  } catch (err) {
-    console.error('Login error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+
+  } catch (error) {
+    console.error('Login error:', error);
+    res.status(500).json({ error: 'Login failed' });
   }
 });
 
-// Change password
-router.post('/change-password', async (req, res) => {
+/**
+ * Verify token endpoint
+ */
+router.get('/verify', async (req, res) => {
   try {
-    const { username, oldPassword, newPassword } = req.body;
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
 
-    if (!username || !oldPassword || !newPassword) {
-      return res.status(400).json({ error: 'All fields are required' });
+    if (!token) {
+      return res.status(401).json({ valid: false, error: 'No token provided' });
     }
 
-    const admin = await getQuery('SELECT * FROM admins WHERE username = ?', [username]);
+    const secret = process.env.JWT_SECRET || 'your-super-secret-jwt-key-change-this';
+    const decoded = jwt.verify(token, secret);
+
+    const admin = await getOne(
+      'SELECT id, username, email, full_name FROM admins WHERE id = ? AND status = ?',
+      [decoded.id, 'active']
+    );
 
     if (!admin) {
-      return res.status(404).json({ error: 'Admin not found' });
+      return res.status(401).json({ valid: false, error: 'Admin not found' });
     }
 
-    const validPassword = bcrypt.compareSync(oldPassword, admin.password);
+    res.json({
+      valid: true,
+      admin: {
+        id: admin.id,
+        username: admin.username,
+        email: admin.email,
+        full_name: admin.full_name
+      }
+    });
 
-    if (!validPassword) {
-      return res.status(401).json({ error: 'Invalid old password' });
-    }
-
-    const hashedPassword = bcrypt.hashSync(newPassword, 10);
-    const { runQuery } = require('../database');
-    
-    await runQuery('UPDATE admins SET password = ? WHERE username = ?', [hashedPassword, username]);
-
-    res.json({ success: true, message: 'Password changed successfully' });
-  } catch (err) {
-    console.error('Change password error:', err);
-    res.status(500).json({ error: 'Internal server error' });
+  } catch (error) {
+    res.status(401).json({ valid: false, error: 'Invalid token' });
   }
 });
 
