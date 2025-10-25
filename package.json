@@ -5,9 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js",
-    "build": "cd client && npm run build",
-    "install-all": "npm install && cd client && npm install"
+    "dev": "nodemon server.js"
   },
   "keywords": ["iptv", "subscription", "whatsapp", "admin"],
   "author": "",

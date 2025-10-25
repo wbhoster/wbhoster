@@ -33,12 +33,9 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve static files from client build (React frontend)
-const clientBuildPath = path.join(__dirname, 'client', 'build');
-if (require('fs').existsSync(clientBuildPath)) {
-  app.use(express.static(clientBuildPath));
-  console.log('✅ Serving React frontend from', clientBuildPath);
-}
+// Serve static files (HTML/CSS/JS frontend)
+app.use(express.static(__dirname));
+console.log('✅ Serving static frontend from', __dirname);
 
 // Serve invoices directory (protected - requires authentication would be better)
 app.use('/invoices', express.static(path.join(__dirname, 'invoices')));
@@ -72,13 +69,13 @@ app.get('/api/system-info', (req, res) => {
   });
 });
 
-// Serve React app for all other routes (SPA support)
+// Serve index.html for all other routes (SPA support)
 app.get('*', (req, res) => {
-  const indexPath = path.join(clientBuildPath, 'index.html');
+  const indexPath = path.join(__dirname, 'index.html');
   if (require('fs').existsSync(indexPath)) {
     res.sendFile(indexPath);
   } else {
-    res.status(404).json({ error: 'Frontend not built. Run: npm run build' });
+    res.status(404).json({ error: 'Frontend files not found' });
   }
 });
 
